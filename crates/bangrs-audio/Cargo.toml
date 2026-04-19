@@ -1,7 +1,13 @@
 [package]
 name = "bangrs-audio"
-edition = "2024"
 version.workspace = true
+edition.workspace = true
 license.workspace = true
 
 [dependencies]
+bangrs-core = { path = "../bangrs-core" }
+thiserror = { workspace = true }
+cpal = { workspace = true }
+symphonia = { workspace = true }
+crossbeam-channel = { workspace = true }
+tracing = { workspace = true }
