@@ -1,0 +1,19 @@
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# Slint build cache
+.slint-cache/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# agents
+AGENTS.md
+CLAUDE.md
+agent-docs/

@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/bangrs-core",
+    "crates/bangrs-audio",
+    "crates/bangrs-scan",
+    "crates/bangrs-ui",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+
+[workspace.dependencies]
+# Pinned versions — red strike will reference these by name; green strike may need to bump.
+anyhow = "1"
+thiserror = "1"
+camino = "1"
+lofty = "0.22"
+walkdir = "2"
+tempfile = "3"
+symphonia = { version = "0.5", features = ["all"] }
+cpal = "0.15"
+slint = "1.8"
+rfd = "0.14"
+crossbeam-channel = "0.5"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
