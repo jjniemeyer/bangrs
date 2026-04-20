@@ -30,20 +30,35 @@ impl Player {
         }
     }
 
-    pub fn load(self, _track: Track) -> Result<Self, CoreError> {
-        todo!("green: only valid from Stopped")
+    pub fn load(self, track: Track) -> Result<Self, CoreError> {
+        match self {
+            Player::Stopped => Ok(Player::Loaded { track }),
+            other => Err(CoreError::InvalidTransition { from: other.name(), to: "Loaded" }),
+        }
     }
     pub fn play(self) -> Result<Self, CoreError> {
-        todo!("green: valid from Loaded (position=0) or Paused (keep position)")
+        match self {
+            Player::Loaded { track } => Ok(Player::Playing { track, position: Duration::ZERO }),
+            Player::Paused { track, position } => Ok(Player::Playing { track, position }),
+            other => Err(CoreError::InvalidTransition { from: other.name(), to: "Playing" }),
+        }
     }
     pub fn pause(self) -> Result<Self, CoreError> {
-        todo!("green: valid from Playing")
+        match self {
+            Player::Playing { track, position } => Ok(Player::Paused { track, position }),
+            other => Err(CoreError::InvalidTransition { from: other.name(), to: "Paused" }),
+        }
     }
     pub fn stop(self) -> Self {
         Player::Stopped
     }
-    pub fn advance(self, _delta: Duration) -> Result<Self, CoreError> {
-        todo!("green: valid from Playing")
+    pub fn advance(self, delta: Duration) -> Result<Self, CoreError> {
+        match self {
+            Player::Playing { track, position } => {
+                Ok(Player::Playing { track, position: position + delta })
+            }
+            other => Err(CoreError::InvalidTransition { from: other.name(), to: "Playing" }),
+        }
     }
 }
 
