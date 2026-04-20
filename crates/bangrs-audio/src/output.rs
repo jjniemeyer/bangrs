@@ -126,14 +126,9 @@ impl Output for CpalOutput {
     }
 }
 
+#[derive(Default)]
 pub struct FakeOutput {
     pub buffers: Vec<Vec<f32>>,
-}
-
-impl Default for FakeOutput {
-    fn default() -> Self {
-        Self { buffers: Vec::new() }
-    }
 }
 
 impl Output for FakeOutput {

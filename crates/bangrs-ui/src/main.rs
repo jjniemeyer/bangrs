@@ -73,11 +73,11 @@ fn main() -> anyhow::Result<()> {
         window.on_play_clicked(move || {
             if let Some(l) = link.borrow().as_ref() {
                 let row = *selected_row.borrow();
-                if row >= 0 {
-                    if let Some(id) = l.track_ids.get(row as usize).copied() {
-                        let _ = l.handle.play(id);
-                        return;
-                    }
+                if row >= 0
+                    && let Some(id) = l.track_ids.get(row as usize).copied()
+                {
+                    let _ = l.handle.play(id);
+                    return;
                 }
                 let _ = l.handle.resume();
             }
@@ -107,10 +107,10 @@ fn main() -> anyhow::Result<()> {
         let link = link.clone();
         window.on_track_activated(move |idx| {
             *selected_row.borrow_mut() = idx;
-            if let Some(l) = link.borrow().as_ref() {
-                if let Some(id) = l.track_ids.get(idx as usize).copied() {
-                    let _ = l.handle.play(id);
-                }
+            if let Some(l) = link.borrow().as_ref()
+                && let Some(id) = l.track_ids.get(idx as usize).copied()
+            {
+                let _ = l.handle.play(id);
             }
         });
     }

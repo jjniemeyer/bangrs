@@ -234,37 +234,37 @@ impl AudioEngine for CpalEngine {
                 Err(mpsc::RecvTimeoutError::Disconnected) => break,
             }
 
-            if let Some(at) = active.as_mut() {
-                if !paused {
-                    let target_buffered =
-                        (at.sample_rate as usize) * (output.channels as usize) / 4; // ~250 ms
-                    while output.buffered_samples() < target_buffered {
-                        match decode_one(at, &mut output) {
-                            DecodeStep::Wrote => {}
-                            DecodeStep::EndOfStream => {
-                                let _ = tx.send(Event::TrackEnded { track_id: at.id });
-                                active = None;
-                                break;
-                            }
-                            DecodeStep::Failed(reason) => {
-                                let _ = tx.send(Event::TrackFailed {
-                                    track_id: at.id,
-                                    reason,
-                                });
-                                active = None;
-                                break;
-                            }
+            if let Some(at) = active.as_mut()
+                && !paused
+            {
+                let target_buffered =
+                    (at.sample_rate as usize) * (output.channels as usize) / 4; // ~250 ms
+                while output.buffered_samples() < target_buffered {
+                    match decode_one(at, &mut output) {
+                        DecodeStep::Wrote => {}
+                        DecodeStep::EndOfStream => {
+                            let _ = tx.send(Event::TrackEnded { track_id: at.id });
+                            active = None;
+                            break;
+                        }
+                        DecodeStep::Failed(reason) => {
+                            let _ = tx.send(Event::TrackFailed {
+                                track_id: at.id,
+                                reason,
+                            });
+                            active = None;
+                            break;
                         }
                     }
+                }
 
-                    if let Some(at) = active.as_ref() {
-                        let ms = at.frames_played.saturating_mul(1000)
-                            / at.sample_rate.max(1) as u64;
-                        position.store(ms, Ordering::Relaxed);
-                        if last_position_emit.elapsed() >= Duration::from_millis(200) {
-                            let _ = tx.send(Event::PositionUpdate { ms });
-                            last_position_emit = Instant::now();
-                        }
+                if let Some(at) = active.as_ref() {
+                    let ms = at.frames_played.saturating_mul(1000)
+                        / at.sample_rate.max(1) as u64;
+                    position.store(ms, Ordering::Relaxed);
+                    if last_position_emit.elapsed() >= Duration::from_millis(200) {
+                        let _ = tx.send(Event::PositionUpdate { ms });
+                        last_position_emit = Instant::now();
                     }
                 }
             }

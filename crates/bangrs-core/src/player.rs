@@ -2,18 +2,13 @@ use crate::error::CoreError;
 use crate::library::Track;
 use std::time::Duration;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum Player {
+    #[default]
     Stopped,
     Loaded { track: Track },
     Playing { track: Track, position: Duration },
     Paused { track: Track, position: Duration },
-}
-
-impl Default for Player {
-    fn default() -> Self {
-        Player::Stopped
-    }
 }
 
 impl Player {
