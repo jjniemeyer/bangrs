@@ -110,6 +110,15 @@ fn f32_to_u16(s: f32) -> u16 {
     ((s.clamp(-1.0, 1.0) * 0.5 + 0.5) * u16::MAX as f32) as u16
 }
 
+impl CpalOutput {
+    pub fn buffered_samples(&self) -> usize {
+        self.ring.lock().expect("ring poisoned").len()
+    }
+    pub fn clear(&mut self) {
+        self.ring.lock().expect("ring poisoned").clear();
+    }
+}
+
 impl Output for CpalOutput {
     fn write(&mut self, samples: &[f32]) {
         let mut guard = self.ring.lock().expect("ring poisoned");
