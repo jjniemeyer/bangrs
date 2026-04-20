@@ -75,6 +75,10 @@ pub struct FakeScanner {
 
 impl Scanner for FakeScanner {
     fn scan<'a>(&'a self, _root: &Path) -> Box<dyn Iterator<Item = Result<Track, ScanError>> + 'a> {
-        todo!("green: drain self.items into an iterator")
+        let iter = self.items.iter().map(|r| match r {
+            Ok(t) => Ok(t.clone()),
+            Err(e) => Err(ScanError::UnsupportedFormat(e.to_string())),
+        });
+        Box::new(iter)
     }
 }
