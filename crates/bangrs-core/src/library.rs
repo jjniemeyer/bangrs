@@ -42,18 +42,22 @@ pub struct Library {
 }
 
 impl Library {
-    pub fn new(_tracks: Vec<Track>) -> Self {
-        todo!("green: store tracks, build by_id index")
+    pub fn new(tracks: Vec<Track>) -> Self {
+        let by_id = tracks
+            .iter()
+            .enumerate()
+            .map(|(i, t)| (t.id, i))
+            .collect();
+        Self { tracks, by_id }
     }
-    pub fn get(&self, _id: TrackId) -> Option<&Track> {
-        todo!("green")
+    pub fn get(&self, id: TrackId) -> Option<&Track> {
+        self.by_id.get(&id).map(|&i| &self.tracks[i])
     }
-    pub fn iter(&self) -> impl Iterator<Item = &Track> {
-        // Note to green: replace with `self.tracks.iter()` once bodies are filled in.
-        std::iter::empty::<&Track>()
+    pub fn iter(&self) -> std::slice::Iter<'_, Track> {
+        self.tracks.iter()
     }
     pub fn len(&self) -> usize {
-        todo!("green")
+        self.tracks.len()
     }
     pub fn is_empty(&self) -> bool {
         self.len() == 0
