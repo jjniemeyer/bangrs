@@ -31,8 +31,14 @@ pub struct TrackRow {
 }
 
 impl From<&Track> for TrackRow {
-    fn from(_t: &Track) -> Self {
-        todo!("green: map Track to TrackRow, default missing fields to empty string")
+    fn from(t: &Track) -> Self {
+        TrackRow {
+            id: t.id,
+            title: t.title.clone(),
+            artist: t.artist.clone().unwrap_or_default(),
+            album: t.album.clone().unwrap_or_default(),
+            duration_ms: t.duration.as_millis() as u64,
+        }
     }
 }
 
