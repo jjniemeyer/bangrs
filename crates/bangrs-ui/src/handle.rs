@@ -4,9 +4,17 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{mpsc, Arc};
 use std::time::Duration;
 
+#[derive(Clone)]
 pub struct PlayerHandle {
     tx: mpsc::SyncSender<Command>,
     position: Arc<AtomicU64>,
+}
+
+fn send(tx: &mpsc::SyncSender<Command>, cmd: Command) -> Result<(), HandleError> {
+    tx.try_send(cmd).map_err(|e| match e {
+        mpsc::TrySendError::Full(_) => HandleError::QueueFull,
+        mpsc::TrySendError::Disconnected(_) => HandleError::ThreadClosed,
+    })
 }
 
 impl PlayerHandle {
@@ -14,26 +22,26 @@ impl PlayerHandle {
         Self { tx, position }
     }
 
-    pub fn play(&self, _track_id: TrackId) -> Result<(), HandleError> {
-        todo!("green: try_send Play")
+    pub fn play(&self, track_id: TrackId) -> Result<(), HandleError> {
+        send(&self.tx, Command::Play(track_id))
     }
     pub fn pause(&self) -> Result<(), HandleError> {
-        todo!("green: try_send Pause")
+        send(&self.tx, Command::Pause)
     }
     pub fn resume(&self) -> Result<(), HandleError> {
-        todo!("green: try_send Resume")
+        send(&self.tx, Command::Resume)
     }
     pub fn stop(&self) -> Result<(), HandleError> {
-        todo!("green: try_send Stop")
+        send(&self.tx, Command::Stop)
     }
-    pub fn seek(&self, _position: Duration) -> Result<(), HandleError> {
-        todo!("green: try_send Seek, coalesce")
+    pub fn seek(&self, position: Duration) -> Result<(), HandleError> {
+        send(&self.tx, Command::Seek(position))
     }
     pub fn position(&self) -> Duration {
         Duration::from_millis(self.position.load(Ordering::Relaxed))
     }
     pub fn shutdown(self) -> Result<(), HandleError> {
-        todo!("green: try_send Shutdown")
+        send(&self.tx, Command::Shutdown)
     }
 }
 
