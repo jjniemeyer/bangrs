@@ -2,7 +2,6 @@
 
 A minimal desktop music player built in Rust. A learning project — the goal is to explore [Slint](https://slint.dev/) for desktop UI, [cpal](https://github.com/RustAudio/cpal) for audio output, and [symphonia](https://github.com/pdeljanov/Symphonia) for decoding, under a GPL-licensed workspace.
 
-Not production-ready. Not trying to compete with Rhythmbox, Strawberry, or similar. Just a clean slice that covers scan → library → playback → UI end-to-end, with room to grow.
 
 ## Status
 
