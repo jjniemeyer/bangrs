@@ -13,11 +13,45 @@ pub struct ViewModel {
 }
 
 impl ViewModel {
-    pub fn apply(self, _ev: &Event) -> Self {
-        todo!("green: exhaustive match on Event")
+    pub fn apply(mut self, ev: &Event) -> Self {
+        match ev {
+            Event::PlaybackStarted { track_id } => {
+                self.is_playing = true;
+                self.is_paused = false;
+                self.current_track = Some(*track_id);
+            }
+            Event::PlaybackPaused => {
+                self.is_playing = false;
+                self.is_paused = true;
+            }
+            Event::PlaybackResumed => {
+                self.is_playing = true;
+                self.is_paused = false;
+            }
+            Event::PlaybackStopped => {
+                self.is_playing = false;
+                self.is_paused = false;
+                self.current_track = None;
+            }
+            Event::TrackEnded { .. } => {
+                self.is_playing = false;
+                self.current_track = None;
+            }
+            Event::TrackFailed { reason, .. } => {
+                self.error_banner = Some(reason.clone());
+            }
+            Event::FatalError(reason) => {
+                self.error_banner = Some(reason.clone());
+            }
+            Event::PositionUpdate { ms } => {
+                self.position_ms = *ms;
+            }
+        }
+        self
     }
-    pub fn set_library(self, _lib: Arc<Library>) -> Self {
-        todo!("green: populate tracks from lib.iter()")
+    pub fn set_library(mut self, lib: Arc<Library>) -> Self {
+        self.tracks = lib.iter().map(TrackRow::from).collect();
+        self
     }
 }
 
