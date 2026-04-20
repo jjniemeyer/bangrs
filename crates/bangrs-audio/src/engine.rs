@@ -37,11 +37,20 @@ impl AudioEngine for FakeEngine {
     fn run(
         self,
         _library: Arc<Library>,
-        _rx: mpsc::Receiver<Command>,
-        _tx: Sender<Event>,
+        rx: mpsc::Receiver<Command>,
+        tx: Sender<Event>,
         _position: Arc<AtomicU64>,
     ) {
-        todo!("green: drain rx, emit self.scripted_events, then return on Command::Shutdown")
+        loop {
+            match rx.recv() {
+                Ok(Command::Shutdown) | Err(_) => break,
+                Ok(_) => {
+                    for ev in self.scripted_events.iter() {
+                        tx.send(ev.clone()).ok();
+                    }
+                }
+            }
+        }
     }
 }
 
