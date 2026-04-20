@@ -1,0 +1,40 @@
+// Minimal Slint UI — green agent can iterate.
+import { Button, VerticalBox, HorizontalBox, ListView, StandardListView } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    title: "bangrs";
+    preferred-width: 800px;
+    preferred-height: 600px;
+
+    in-out property <bool> is-playing: false;
+    in-out property <bool> is-paused: false;
+    in-out property <int>  current-track-id: -1;
+    in-out property <int>  position-ms: 0;
+    in-out property <[StandardListViewItem]> tracks: [];
+    in-out property <string> error-banner: "";
+
+    callback pick-library();
+    callback play-clicked();
+    callback pause-clicked();
+    callback stop-clicked();
+    callback track-activated(int); // row index
+
+    VerticalBox {
+        HorizontalBox {
+            Button { text: "Pick Library"; clicked => { root.pick-library(); } }
+            Button { text: "Play";  enabled: !root.is-playing; clicked => { root.play-clicked();  } }
+            Button { text: "Pause"; enabled: root.is-playing;  clicked => { root.pause-clicked(); } }
+            Button { text: "Stop";  clicked => { root.stop-clicked(); } }
+        }
+
+        if root.error-banner != "": Rectangle {
+            background: #ff5555;
+            Text { text: root.error-banner; }
+        }
+
+        StandardListView {
+            model: root.tracks;
+            current-item-changed(idx) => { root.track-activated(idx); }
+        }
+    }
+}

@@ -17,3 +17,4 @@ Cargo.lock.bak
 AGENTS.md
 CLAUDE.md
 agent-docs/
+.claude/

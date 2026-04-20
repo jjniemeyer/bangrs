@@ -1,7 +1,23 @@
 [package]
 name = "bangrs-ui"
-edition = "2024"
 version.workspace = true
+edition.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "bangrs"
+path = "src/main.rs"
+
 [dependencies]
+bangrs-core = { path = "../bangrs-core" }
+bangrs-audio = { path = "../bangrs-audio" }
+bangrs-scan = { path = "../bangrs-scan" }
+anyhow = { workspace = true }
+slint = { workspace = true }
+rfd = { workspace = true }
+crossbeam-channel = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[build-dependencies]
+slint-build = "1.8"
