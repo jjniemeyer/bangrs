@@ -38,8 +38,20 @@ pub type ActivationHandler = Box<dyn Fn(i32) + Send + Sync>;
 /// indices are silently dropped (defensive — Slint can fire activation
 /// during a `set_tracks` rebind).
 pub fn wire_handlers(
-    _sink: Arc<dyn CommandSink>,
-    _track_ids: Arc<Vec<TrackId>>,
+    sink: Arc<dyn CommandSink>,
+    track_ids: Arc<Vec<TrackId>>,
 ) -> (SelectionHandler, ActivationHandler) {
-    todo!("green agent implements")
+    let selection: SelectionHandler = Box::new(|_idx: i32| {});
+
+    let activation: ActivationHandler = Box::new(move |idx: i32| {
+        if idx < 0 {
+            return;
+        }
+        let Some(track_id) = track_ids.get(idx as usize).copied() else {
+            return;
+        };
+        let _ = sink.send(Command::Play(track_id));
+    });
+
+    (selection, activation)
 }
