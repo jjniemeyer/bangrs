@@ -1,6 +1,7 @@
 use bangrs_audio::{AudioEngine, CpalEngine, Event};
 use bangrs_core::{Library, TrackId, ViewModel};
 use bangrs_scan::{FilesystemScanner, Scanner};
+use bangrs_ui::handlers::{wire_handlers, ActivationHandler, CommandSink, SelectionHandler};
 use bangrs_ui::PlayerHandle;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -39,10 +40,13 @@ fn main() -> anyhow::Result<()> {
     let vm = Rc::new(RefCell::new(ViewModel::default()));
     let link: Rc<RefCell<Option<EngineLink>>> = Rc::new(RefCell::new(None));
     let selected_row: Rc<RefCell<i32>> = Rc::new(RefCell::new(-1));
+    let handlers: Rc<RefCell<Option<(SelectionHandler, ActivationHandler)>>> =
+        Rc::new(RefCell::new(None));
 
     {
         let link = link.clone();
         let vm = vm.clone();
+        let handlers = handlers.clone();
         let window_weak = window.as_weak();
         window.on_pick_library(move || {
             let Some(path) = rfd::FileDialog::new().pick_folder() else {
@@ -56,7 +60,10 @@ fn main() -> anyhow::Result<()> {
             if let Some(old) = link.borrow_mut().take() {
                 let _ = old.handle.shutdown();
             }
-            *link.borrow_mut() = Some(spawn_engine(library.clone(), track_ids));
+            let new_link = spawn_engine(library.clone(), track_ids.clone());
+            let sink: Arc<dyn CommandSink> = Arc::new(new_link.handle.clone());
+            *handlers.borrow_mut() = Some(wire_handlers(sink, Arc::new(track_ids)));
+            *link.borrow_mut() = Some(new_link);
 
             let updated = vm.borrow().clone().set_library(library);
             *vm.borrow_mut() = updated;
@@ -104,13 +111,20 @@ fn main() -> anyhow::Result<()> {
 
     {
         let selected_row = selected_row.clone();
-        let link = link.clone();
-        window.on_track_activated(move |idx| {
+        let handlers = handlers.clone();
+        window.on_selection_changed(move |idx| {
             *selected_row.borrow_mut() = idx;
-            if let Some(l) = link.borrow().as_ref()
-                && let Some(id) = l.track_ids.get(idx as usize).copied()
-            {
-                let _ = l.handle.play(id);
+            if let Some((sel, _)) = handlers.borrow().as_ref() {
+                sel(idx);
+            }
+        });
+    }
+
+    {
+        let handlers = handlers.clone();
+        window.on_track_activated(move |idx| {
+            if let Some((_, act)) = handlers.borrow().as_ref() {
+                act(idx);
             }
         });
     }
