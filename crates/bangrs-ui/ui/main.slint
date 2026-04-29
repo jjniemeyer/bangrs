@@ -24,7 +24,17 @@ export component MainWindow inherits Window {
     VerticalBox {
         HorizontalBox {
             Button { text: "Pick Library"; clicked => { root.pick-library(); } }
-            Button { text: "Play";  enabled: !root.is-playing; clicked => { root.play-clicked();  } }
+            Button {
+                text: "Play";
+                enabled: !root.is-playing;
+                clicked => {
+                    if (root.selected-row >= 0) {
+                        root.track-activated(root.selected-row);
+                    } else {
+                        root.play-clicked();
+                    }
+                }
+            }
             Button { text: "Pause"; enabled: root.is-playing;  clicked => { root.pause-clicked(); } }
             Button { text: "Stop";  clicked => { root.stop-clicked(); } }
         }
