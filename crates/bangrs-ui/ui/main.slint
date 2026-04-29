@@ -12,12 +12,14 @@ export component MainWindow inherits Window {
     in-out property <int>  position-ms: 0;
     in-out property <[StandardListViewItem]> tracks: [];
     in-out property <string> error-banner: "";
+    in-out property <int> selected-row: -1;
 
     callback pick-library();
     callback play-clicked();
     callback pause-clicked();
     callback stop-clicked();
-    callback track-activated(int); // row index
+    callback selection-changed(int); // row index, fires on every selection
+    callback track-activated(int);   // row index, fires only on explicit activation
 
     VerticalBox {
         HorizontalBox {
@@ -34,7 +36,10 @@ export component MainWindow inherits Window {
 
         StandardListView {
             model: root.tracks;
-            current-item-changed(idx) => { root.track-activated(idx); }
+            current-item-changed(idx) => {
+                root.selected-row = idx;
+                root.selection-changed(idx);
+            }
         }
     }
 }
