@@ -7,7 +7,7 @@ use lofty::tag::Accessor;
 use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-pub trait Scanner {
+pub trait Scanner: Send + Sync {
     fn scan<'a>(&'a self, root: &Path) -> Box<dyn Iterator<Item = Result<Track, ScanError>> + 'a>;
 }
 
