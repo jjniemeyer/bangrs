@@ -17,7 +17,7 @@ impl Dispatcher for SlintDispatcher {
     fn dispatch(&self, f: Box<dyn FnOnce() + Send + 'static>) {
         // The Err case only triggers after the event loop has shut down,
         // i.e. the app is dying — discard.
-        let _ = slint::invoke_from_event_loop(move || f());
+        let _ = slint::invoke_from_event_loop(f);
     }
 }
 
