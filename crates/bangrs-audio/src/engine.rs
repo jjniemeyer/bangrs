@@ -105,6 +105,9 @@ fn decode_one(active: &mut ActiveTrack, output: &mut CpalOutput) -> DecodeStep {
     };
     let spec = *decoded.spec();
     let frames = decoded.frames();
+    if frames == 0 {
+        return DecodeStep::Wrote;
+    }
     let mut sample_buf = SampleBuffer::<f32>::new(frames as u64, spec);
     sample_buf.copy_interleaved_ref(decoded);
 

@@ -597,6 +597,7 @@ dependencies = [
  "bangrs-audio",
  "bangrs-core",
  "bangrs-scan",
+ "camino",
  "crossbeam-channel",
  "rfd",
  "slint",
