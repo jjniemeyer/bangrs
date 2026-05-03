@@ -21,7 +21,7 @@ lofty = "0.24"
 walkdir = "2"
 tempfile = "3"
 symphonia = { version = "0.5", features = ["all"] }
-cpal = "0.15"
+cpal = "0.17"
 slint = "1.16"
 rfd = "0.15"
 crossbeam-channel = "0.5"
