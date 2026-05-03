@@ -1,6 +1,4 @@
-use bangrs_audio::negotiate::{
-    negotiate_config, ChosenConfig, ConfigRange, NoMatchingConfig, SampleFormat,
-};
+use bangrs_audio::negotiate::{negotiate_config, ChosenConfig, ConfigRange, SampleFormat};
 
 fn r(min: u32, max: u32, ch: u16, fmt: SampleFormat) -> ConfigRange {
     ConfigRange {
@@ -85,7 +83,33 @@ fn empty_supported_no_match() {
 #[test]
 #[ignore]
 fn smoke_against_real_device() {
-    // Green: copy the body from the Shape spec — query the default cpal output
-    // device's supported configs, run negotiate_config against [22050, 44100,
-    // 48000, 96000], eprintln! the results.
+    use cpal::traits::{DeviceTrait, HostTrait};
+
+    fn convert_format(f: cpal::SampleFormat) -> Option<SampleFormat> {
+        match f {
+            cpal::SampleFormat::I16 => Some(SampleFormat::I16),
+            cpal::SampleFormat::F32 => Some(SampleFormat::F32),
+            _ => None,
+        }
+    }
+
+    let host = cpal::default_host();
+    let device = host.default_output_device().expect("no default device");
+    let supported: Vec<ConfigRange> = device
+        .supported_output_configs()
+        .expect("supported_output_configs failed")
+        .filter_map(|range| {
+            convert_format(range.sample_format()).map(|fmt| ConfigRange {
+                channels: range.channels(),
+                sample_format: fmt,
+                min_rate_hz: range.min_sample_rate().0,
+                max_rate_hz: range.max_sample_rate().0,
+            })
+        })
+        .collect();
+
+    for rate in [22050u32, 44100, 48000, 96000] {
+        let result = negotiate_config(&supported, rate, SampleFormat::F32, 2);
+        eprintln!("rate {} → {:?}", rate, result);
+    }
 }
