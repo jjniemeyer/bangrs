@@ -45,16 +45,79 @@ pub struct NoMatchingConfig {
 
 /// Pick a `ChosenConfig` for the given track. See module docs.
 pub fn negotiate_config(
-    _supported: &[ConfigRange],
-    _track_rate_hz: u32,
-    _desired_format: SampleFormat,
-    _desired_channels: u16,
+    supported: &[ConfigRange],
+    track_rate_hz: u32,
+    desired_format: SampleFormat,
+    desired_channels: u16,
 ) -> Result<ChosenConfig, NoMatchingConfig> {
-    unimplemented!("green: implement per Shape's three-step algorithm")
+    for range in supported {
+        if range.channels == desired_channels
+            && range.sample_format == desired_format
+            && range.min_rate_hz <= track_rate_hz
+            && track_rate_hz <= range.max_rate_hz
+        {
+            return Ok(ChosenConfig {
+                channels: desired_channels,
+                sample_format: desired_format,
+                rate_hz: track_rate_hz,
+            });
+        }
+    }
+
+    let track = track_rate_hz as f64;
+    for range in supported {
+        if range.channels != desired_channels || range.sample_format != desired_format {
+            continue;
+        }
+        let dmin = ((range.min_rate_hz as f64) - track).abs() / track;
+        let dmax = ((range.max_rate_hz as f64) - track).abs() / track;
+        if dmin <= 0.01 && dmin <= dmax {
+            return Ok(ChosenConfig {
+                channels: desired_channels,
+                sample_format: desired_format,
+                rate_hz: range.min_rate_hz,
+            });
+        }
+        if dmax <= 0.01 {
+            return Ok(ChosenConfig {
+                channels: desired_channels,
+                sample_format: desired_format,
+                rate_hz: range.max_rate_hz,
+            });
+        }
+    }
+
+    let mut rates: Vec<u32> = Vec::new();
+    for range in supported {
+        if range.channels != desired_channels || range.sample_format != desired_format {
+            continue;
+        }
+        rates.push(range.min_rate_hz);
+        if range.max_rate_hz != range.min_rate_hz {
+            rates.push(range.max_rate_hz);
+        }
+    }
+    rates.sort_unstable();
+    rates.dedup();
+
+    Err(NoMatchingConfig {
+        track_rate_hz,
+        nearby_rates_hz: rates,
+    })
 }
 
 impl std::fmt::Display for NoMatchingConfig {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        unimplemented!("green: implement \"no cpal config supports rate {{}} Hz; available rates: {{}}; track skipped\"")
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let rates = self
+            .nearby_rates_hz
+            .iter()
+            .map(|r| r.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        write!(
+            f,
+            "no cpal config supports rate {} Hz; available rates: {}; track skipped",
+            self.track_rate_hz, rates,
+        )
     }
 }
