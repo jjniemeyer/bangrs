@@ -22,7 +22,7 @@ walkdir = "2"
 tempfile = "3"
 symphonia = { version = "0.5", features = ["all"] }
 cpal = "0.15"
-slint = "1.8"
+slint = "1.16"
 rfd = "0.15"
 crossbeam-channel = "0.5"
 tracing = "0.1"
