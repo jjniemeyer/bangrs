@@ -102,8 +102,8 @@ fn smoke_against_real_device() {
             convert_format(range.sample_format()).map(|fmt| ConfigRange {
                 channels: range.channels(),
                 sample_format: fmt,
-                min_rate_hz: range.min_sample_rate().0,
-                max_rate_hz: range.max_sample_rate().0,
+                min_rate_hz: range.min_sample_rate(),
+                max_rate_hz: range.max_sample_rate(),
             })
         })
         .collect();

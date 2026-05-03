@@ -42,9 +42,9 @@ impl CpalOutput {
         let channels = supported.channels();
         let mut config: cpal::StreamConfig = supported.into();
         if let Some(rate) = rate_override_hz {
-            config.sample_rate = cpal::SampleRate(rate);
+            config.sample_rate = rate;
         }
-        let sample_rate = config.sample_rate.0;
+        let sample_rate = config.sample_rate;
 
         let ring: Arc<Mutex<VecDeque<f32>>> = Arc::new(Mutex::new(VecDeque::with_capacity(1 << 16)));
         let err_fn = |e| tracing::error!("cpal stream error: {e}");
@@ -118,8 +118,8 @@ pub fn collect_supported_configs() -> Result<Vec<ConfigRange>, AudioError> {
             Some(ConfigRange {
                 channels: range.channels(),
                 sample_format: fmt,
-                min_rate_hz: range.min_sample_rate().0,
-                max_rate_hz: range.max_sample_rate().0,
+                min_rate_hz: range.min_sample_rate(),
+                max_rate_hz: range.max_sample_rate(),
             })
         })
         .collect();
