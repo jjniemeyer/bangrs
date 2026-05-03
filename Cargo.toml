@@ -23,7 +23,7 @@ tempfile = "3"
 symphonia = { version = "0.5", features = ["all"] }
 cpal = "0.15"
 slint = "1.8"
-rfd = "0.14"
+rfd = "0.15"
 crossbeam-channel = "0.5"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
