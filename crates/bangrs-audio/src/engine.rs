@@ -1,5 +1,6 @@
 use crate::command::Command;
-use crate::output::{CpalOutput, Output};
+use crate::negotiate::{negotiate_config, SampleFormat};
+use crate::output::{collect_supported_configs, CpalOutput, Output};
 use bangrs_core::{Event, Library, Track, TrackId};
 use crossbeam_channel::Sender;
 use std::fs::File;
@@ -154,14 +155,14 @@ impl AudioEngine for CpalEngine {
         tx: Sender<Event>,
         position: Arc<AtomicU64>,
     ) {
-        let (mut output, _stream) = match CpalOutput::new() {
+        let (mut output, mut _stream) = match CpalOutput::new() {
             Ok(pair) => pair,
             Err(e) => {
                 let _ = tx.send(Event::FatalError(e.to_string()));
                 return;
             }
         };
-        let device_rate = output.sample_rate;
+        let mut device_rate = output.sample_rate;
 
         let mut active: Option<ActiveTrack> = None;
         let mut paused = false;
@@ -181,20 +182,53 @@ impl AudioEngine for CpalEngine {
                     match library.get(id) {
                         Some(track) => match open_track(track) {
                             Ok(mut at) => {
-                                if at.sample_rate != device_rate {
-                                    let _ = tx.send(Event::TrackFailed {
-                                        track_id: id,
-                                        reason: format!(
-                                            "sample rate mismatch: track={} device={}",
-                                            at.sample_rate, device_rate
-                                        ),
-                                    });
-                                    active = None;
-                                } else {
-                                    at.frames_played = 0;
-                                    active = Some(at);
-                                    paused = false;
-                                    let _ = tx.send(Event::PlaybackStarted { track_id: id });
+                                let supported = match collect_supported_configs() {
+                                    Ok(s) => s,
+                                    Err(e) => {
+                                        let _ = tx.send(Event::TrackFailed {
+                                            track_id: id,
+                                            reason: format!("device error: {e}"),
+                                        });
+                                        active = None;
+                                        continue;
+                                    }
+                                };
+                                match negotiate_config(
+                                    &supported,
+                                    at.sample_rate,
+                                    SampleFormat::F32,
+                                    2,
+                                ) {
+                                    Err(nmc) => {
+                                        let _ = tx.send(Event::TrackFailed {
+                                            track_id: id,
+                                            reason: nmc.to_string(),
+                                        });
+                                        active = None;
+                                    }
+                                    Ok(chosen) => {
+                                        if chosen.rate_hz != device_rate {
+                                            drop(_stream);
+                                            drop(output);
+                                            match CpalOutput::with_sample_rate(chosen.rate_hz) {
+                                                Ok((new_output, new_stream)) => {
+                                                    output = new_output;
+                                                    _stream = new_stream;
+                                                    device_rate = output.sample_rate;
+                                                }
+                                                Err(e) => {
+                                                    let _ = tx.send(Event::FatalError(
+                                                        e.to_string(),
+                                                    ));
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                        at.frames_played = 0;
+                                        active = Some(at);
+                                        paused = false;
+                                        let _ = tx.send(Event::PlaybackStarted { track_id: id });
+                                    }
                                 }
                             }
                             Err(reason) => {

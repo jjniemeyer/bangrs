@@ -1,6 +1,7 @@
 pub mod command;
 pub mod engine;
 pub mod error;
+pub mod negotiate;
 pub mod output;
 
 pub use command::Command;

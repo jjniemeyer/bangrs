@@ -4,6 +4,7 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
 use crate::error::AudioError;
+use crate::negotiate::{ConfigRange, SampleFormat as NegFormat};
 
 pub trait Output: Send {
     fn write(&mut self, samples: &[f32]);
@@ -20,6 +21,16 @@ impl CpalOutput {
     /// underlying cpal `Stream`, which the caller must keep alive for the
     /// duration of playback (stream lives on the audio thread; not `Send`).
     pub fn new() -> Result<(Self, Stream), AudioError> {
+        Self::open(None)
+    }
+
+    /// Open the default output device with a specific sample rate, overriding
+    /// the device default. Format and channels come from `default_output_config`.
+    pub fn with_sample_rate(rate_hz: u32) -> Result<(Self, Stream), AudioError> {
+        Self::open(Some(rate_hz))
+    }
+
+    fn open(rate_override_hz: Option<u32>) -> Result<(Self, Stream), AudioError> {
         let host = cpal::default_host();
         let device = host
             .default_output_device()
@@ -28,9 +39,12 @@ impl CpalOutput {
             .default_output_config()
             .map_err(|e| AudioError::Output(e.to_string()))?;
         let sample_format = supported.sample_format();
-        let sample_rate = supported.sample_rate().0;
         let channels = supported.channels();
-        let config: cpal::StreamConfig = supported.into();
+        let mut config: cpal::StreamConfig = supported.into();
+        if let Some(rate) = rate_override_hz {
+            config.sample_rate = cpal::SampleRate(rate);
+        }
+        let sample_rate = config.sample_rate.0;
 
         let ring: Arc<Mutex<VecDeque<f32>>> = Arc::new(Mutex::new(VecDeque::with_capacity(1 << 16)));
         let err_fn = |e| tracing::error!("cpal stream error: {e}");
@@ -82,6 +96,34 @@ impl CpalOutput {
             stream,
         ))
     }
+}
+
+/// Query the default output device's supported configs and translate them to
+/// `ConfigRange`. Sample formats outside `SampleFormat::{I16, F32}` are dropped.
+pub fn collect_supported_configs() -> Result<Vec<ConfigRange>, AudioError> {
+    let host = cpal::default_host();
+    let device = host
+        .default_output_device()
+        .ok_or_else(|| AudioError::Output("no default output device".into()))?;
+    let ranges = device
+        .supported_output_configs()
+        .map_err(|e| AudioError::Output(e.to_string()))?;
+    let collected = ranges
+        .filter_map(|range| {
+            let fmt = match range.sample_format() {
+                SampleFormat::I16 => Some(NegFormat::I16),
+                SampleFormat::F32 => Some(NegFormat::F32),
+                _ => None,
+            }?;
+            Some(ConfigRange {
+                channels: range.channels(),
+                sample_format: fmt,
+                min_rate_hz: range.min_sample_rate().0,
+                max_rate_hz: range.max_sample_rate().0,
+            })
+        })
+        .collect();
+    Ok(collected)
 }
 
 fn drain_into(ring: &Arc<Mutex<VecDeque<f32>>>, out: &mut [f32]) {
