@@ -15,15 +15,15 @@ license = "GPL-3.0-or-later"
 [workspace.dependencies]
 # Pinned versions — red strike will reference these by name; green strike may need to bump.
 anyhow = "1"
-thiserror = "1"
+thiserror = "2"
 camino = "1"
-lofty = "0.22"
+lofty = "0.24"
 walkdir = "2"
 tempfile = "3"
 symphonia = { version = "0.5", features = ["all"] }
-cpal = "0.15"
-slint = "1.8"
-rfd = "0.14"
+cpal = "0.17"
+slint = "1.16"
+rfd = "0.15"
 crossbeam-channel = "0.5"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
