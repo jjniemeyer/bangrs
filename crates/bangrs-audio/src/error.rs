@@ -1,3 +1,5 @@
+use crate::negotiate::NoMatchingConfig;
+
 #[derive(Debug, thiserror::Error)]
 pub enum AudioError {
     #[error("decode failed: {0}")]
@@ -6,8 +8,8 @@ pub enum AudioError {
     Output(String),
     #[error("unsupported format: {0}")]
     UnsupportedFormat(String),
-    #[error("sample rate mismatch: source={source_hz}, device={device_hz}")]
-    SampleRateMismatch { source_hz: u32, device_hz: u32 },
+    #[error("{0}")]
+    NoMatchingConfig(NoMatchingConfig),
 }
 
 #[derive(Debug, thiserror::Error, PartialEq)]
