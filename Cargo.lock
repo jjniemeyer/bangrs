@@ -569,7 +569,7 @@ dependencies = [
  "cpal",
  "crossbeam-channel",
  "symphonia",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "tracing",
 ]
 
@@ -578,7 +578,7 @@ name = "bangrs-core"
 version = "0.1.0"
 dependencies = [
  "camino",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -589,7 +589,7 @@ dependencies = [
  "camino",
  "lofty",
  "tempfile",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "walkdir",
 ]
 

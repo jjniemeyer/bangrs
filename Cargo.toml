@@ -15,7 +15,7 @@ license = "GPL-3.0-or-later"
 [workspace.dependencies]
 # Pinned versions — red strike will reference these by name; green strike may need to bump.
 anyhow = "1"
-thiserror = "1"
+thiserror = "2"
 camino = "1"
 lofty = "0.24"
 walkdir = "2"
